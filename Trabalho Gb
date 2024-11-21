@@ -1,0 +1,156 @@
+#include <stdio.h>
+#include <string.h>
+
+// Definição das structs para ingredientes e poções
+typedef struct {
+    char nome[30]; // Nome do ingrediente
+    int quantidade; // Quantidade atual do ingrediente em estoque
+} Ingrediente;
+
+typedef struct {
+    char nome[30]; // Nome da poção
+    int ingredientes[7]; // Índices dos ingredientes necessários
+    int quantidades[7]; // Quantidades necessárias de cada ingrediente
+} Pocao;
+
+// Função para mostrar o menu
+void exibirMenu() {
+    printf("\n=== Menu ===\n");
+    printf("1. Consultar Ingredientes Disponíveis\n");
+    printf("2. Preparar Poção\n");
+    printf("3. Reabastecer Ingrediente\n");
+    printf("4. Sair\n");
+    printf("Escolha uma opção: ");
+}
+
+// Função para consultar ingredientes
+void consultarIngredientes(Ingrediente ingredientes[], int numIngredientes) {
+    printf("\nIngredientes Disponíveis:\n");
+    for (int i = 0; i < numIngredientes; i++) {
+        printf("%d. %s: %d\n", i + 1, ingredientes[i].nome, ingredientes[i].quantidade);
+    }
+}
+
+// Função para verificar e preparar poção
+void prepararPocao(Pocao pocoes[], Ingrediente ingredientes[], int numPoções, int numIngredientes) {
+    int escolha;
+    printf("\nEscolha uma poção para preparar:\n");
+    for (int i = 0; i < numPoções; i++) {
+        printf("%d. %s\n", i + 1, pocoes[i].nome);
+    }
+    printf("Escolha a poção: ");
+    scanf("%d", &escolha);
+
+    if (escolha < 1 || escolha > numPoções) {
+        printf("Opção inválida!\n");
+        return;
+    }
+
+    escolha--; // Ajuste para índice 0
+    Pocao poçãoEscolhida = pocoes[escolha];
+
+    // Verificação da disponibilidade dos ingredientes
+    int ingredientesFaltando = 0;
+    printf("\nPreparando a Poção: %s\n", poçãoEscolhida.nome);
+    for (int i = 0; i < 7 && poçãoEscolhida.ingredientes[i] != 0; i++) {
+        int indexIngrediente = poçãoEscolhida.ingredientes[i] - 1;
+        if (ingredientes[indexIngrediente].quantidade < poçãoEscolhida.quantidades[i]) {
+            printf("Ingrediente em falta: %s. Necessário %d, disponível %d.\n",
+                   ingredientes[indexIngrediente].nome,
+                   poçãoEscolhida.quantidades[i],
+                   ingredientes[indexIngrediente].quantidade);
+            ingredientesFaltando = 1;
+        }
+    }
+
+    if (ingredientesFaltando) {
+        printf("Não foi possível preparar a poção devido à falta de ingredientes.\n");
+    } else {
+        // Reduz a quantidade de ingredientes no estoque
+        for (int i = 0; i < 7 && poçãoEscolhida.ingredientes[i] != 0; i++) {
+            int indexIngrediente = poçãoEscolhida.ingredientes[i] - 1;
+            ingredientes[indexIngrediente].quantidade -= poçãoEscolhida.quantidades[i];
+        }
+        printf("Poção criada com sucesso!\n");
+        consultarIngredientes(ingredientes, numIngredientes); // Exibe o estoque atualizado
+    }
+}
+
+// Função para reabastecer ingrediente
+void reabastecerIngrediente(Ingrediente ingredientes[], int numIngredientes) {
+    int escolha, quantidade;
+    printf("\nEscolha um ingrediente para reabastecer:\n");
+    for (int i = 0; i < numIngredientes; i++) {
+        printf("%d. %s: %d\n", i + 1, ingredientes[i].nome, ingredientes[i].quantidade);
+    }
+    printf("Escolha o ingrediente (1 a %d): ", numIngredientes);
+    scanf("%d", &escolha);
+
+    if (escolha < 1 || escolha > numIngredientes) {
+        printf("Opção inválida!\n");
+        return;
+    }
+
+    printf("Digite a quantidade a ser adicionada: ");
+    scanf("%d", &quantidade);
+    
+    if (quantidade < 0) {
+        printf("Quantidade inválida!\n");
+        return;
+    }
+
+    escolha--; // Ajuste para índice 0
+    ingredientes[escolha].quantidade += quantidade;
+    printf("Ingrediente %s reabastecido com sucesso. Nova quantidade: %d\n", 
+            ingredientes[escolha].nome, ingredientes[escolha].quantidade);
+}
+
+int main() {
+    // Inicialização dos ingredientes
+    Ingrediente ingredientes[] = {
+        {"Pó de Fênix", 100},
+        {"Essência Celestial", 50},
+        {"Raiz de Dragão", 45},
+        {"Orvalho Lunar", 30},
+        {"Flores secas", 200},
+        {"Elixir amargo", 20},
+        {"Lágrimas de unicórnio", 15}
+    };
+
+    // Inicialização das poções e suas receitas
+    Pocao poções[] = {
+        {"Poção de Cura", {1, 2, 5, 7}, {30, 20, 20, 10}}, // Índices começam em 1
+        {"Poção Força da Floresta", {4, 3, 5}, {20, 30, 30}},
+        {"Poção Sabedoria da Riqueza", {2, 1}, {30, 50}},
+        {"Poção Sorte no Amor", {4, 5, 7}, {10, 50, 5}},
+        {"Poção Malvada", {6, 3}, {10, 15}}
+    };
+
+    int numIngredientes = sizeof(ingredientes) / sizeof(ingredientes[0]);
+    int numPoções = sizeof(poções) / sizeof(poções[0]);
+
+    int opcao;
+    while (1) {
+        exibirMenu();
+        scanf("%d", &opcao);
+
+        switch (opcao) {
+            case 1:
+                consultarIngredientes(ingredientes, numIngredientes);
+                break;
+            case 2:
+                prepararPocao(poções, ingredientes, numPoções, numIngredientes);
+                break;
+            case 3:
+                reabastecerIngrediente(ingredientes, numIngredientes);
+                break;
+            case 4:
+                printf("Saindo do programa...\n");
+                return 0;
+            default:
+                printf("Opção inválida! Tente novamente.\n");
+        }
+    }
+
+    return 0;
+}
